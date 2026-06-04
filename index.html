@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Приемная комиссия | Колледж</title>
+    <style>
+        :root {
+            --primary-color: #2563eb;
+            --bg-color: #f3f4f6;
+            --chat-bg: #ffffff;
+            --user-msg: #e5e7eb;
+            --bot-msg: #eff6ff;
+            --text-main: #1f2937;
+            --accent-color: #10b981;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; background-color: var(--bg-color); color: var(--text-main); display: flex; height: 100vh; }
+
+        .sidebar {
+            width: 350px;
+            background: #1e293b;
+            color: white;
+            padding: 40px 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+        }
+        .sidebar h1 { font-size: 22px; margin-bottom: 10px; line-height: 1.3; color: #f8fafc; }
+        .sidebar p { color: #94a3b8; font-size: 14px; line-height: 1.6; margin-bottom: 30px; }
+        .quick-links { display: flex; flex-direction: column; gap: 10px; }
+        .quick-links button {
+            background: rgba(255, 255, 255, 0.1); border: none; color: white; padding: 12px; text-align: left;
+            border-radius: 8px; cursor: pointer; transition: 0.2s; font-size: 13px;
+        }
+        .quick-links button:hover { background: rgba(255, 255, 255, 0.2); }
+        
+        /* Стиль для кнопки сайта, чтобы она выделялась */
+        .btn-site { background: var(--primary-color) !important; font-weight: bold; }
+        .btn-site:hover { background: #1d4ed8 !important; }
+
+        .main-content { flex: 1; display: flex; justify-content: center; align-items: center; padding: 20px; }
+        
+        .chat-window {
+            width: 100%; max-width: 850px; height: 90vh; background: var(--chat-bg);
+            border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+            display: flex; flex-direction: column; overflow: hidden;
+        }
+
+        .chat-header { padding: 20px; border-bottom: 1px solid #e5e7eb; display: flex; align-items: center; gap: 15px; }
+        .bot-avatar { width: 40px; height: 40px; background: var(--primary-color); border-radius: 50%; display: flex; justify-content: center; align-items: center; font-size: 20px; }
+        .header-info h2 { font-size: 16px; }
+        .header-info span { font-size: 12px; color: var(--accent-color); font-weight: bold; }
+
+        .messages-area { flex: 1; padding: 20px; overflow-y: auto; display: flex; flex-direction: column; gap: 15px; background-image: radial-gradient(#e5e7eb 1px, transparent 1px); background-size: 20px 20px; }
+
+        .message { max-width: 85%; padding: 14px 18px; border-radius: 16px; line-height: 1.5; font-size: 15px; animation: fadeIn 0.3s ease-in-out; }
+        .bot { background-color: var(--bot-msg); color: #1e3a8a; align-self: flex-start; border-bottom-left-radius: 4px; border: 1px solid #bfdbfe; }
+        .user { background-color: var(--user-msg); color: var(--text-main); align-self: flex-end; border-bottom-right-radius: 4px; }
+
+        .info-card { background: white; border-radius: 8px; border: 1px solid #bfdbfe; border-left: 5px solid var(--primary-color); padding: 20px; margin: 10px 0; }
+        .info-card p { margin-bottom: 6px; font-size: 14px; }
+        .info-card b { color: var(--primary-color); }
+        .info-card .seats { margin-top: 15px; }
+
+        .typing { display: none; align-self: flex-start; padding: 10px; color: #6b7280; font-style: italic; font-size: 13px; }
+
+        .input-area { padding: 20px; border-top: 1px solid #e5e7eb; background: #f9fafb; display: flex; gap: 10px; }
+        .input-area input { flex: 1; padding: 15px; border: 1px solid #d1d5db; border-radius: 25px; outline: none; font-size: 15px; }
+        .input-area button { background: var(--primary-color); color: white; border: none; width: 50px; height: 50px; border-radius: 50%; cursor: pointer; display: flex; justify-content: center; align-items: center; transition: 0.2s; }
+        
+        .spec-list { margin-left: 20px; margin-top: 10px; line-height: 1.6; }
+        .spec-list a { color: #2563eb; text-decoration: underline; cursor: pointer; }
+
+        /* Стили для карточки теста выбора профессии */
+        .quiz-card { background: white; border-radius: 12px; border: 1px solid #bfdbfe; padding: 15px; margin: 10px 0; max-width: 100%; }
+        .quiz-card p { margin-bottom: 12px; font-weight: bold; font-size: 14px; }
+        .quiz-btn { display: block; width: 100%; text-align: left; background: #f3f4f6; border: 1px solid #e5e7eb; border-radius: 8px; padding: 10px 12px; margin-bottom: 8px; cursor: pointer; transition: 0.2s; font-size: 13px; color: var(--text-main); }
+        .quiz-btn:hover:not([disabled]) { background: #e5e7eb; }
+        .quiz-btn[disabled] { opacity: 0.6; cursor: not-allowed; }
+
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        @media (max-width: 768px) {
+            body { flex-direction: column; }
+            .sidebar { width: 100%; padding: 20px; height: auto; }
+            .chat-window { height: 100%; border-radius: 0; }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="sidebar">
+        <div>
+            <h1>Информационный центр</h1>
+            <p>Добро пожаловать в виртуальную приемную нашего колледжа. Бот поможет вам найти нужную информацию.</p>
+            
+            <div class="quick-links">
+                <p style="color: white; margin-bottom: 5px; font-weight: bold;">Популярные запросы:</p>
+                <button onclick="fillInput('Список специальностей')">📋 Все специальности</button>
+                <button onclick="fillInput('Кружки и секции')">🎨 Кружки и секции</button>
+                <button onclick="fillInput('Документы для поступления')">📄 Документы для поступления</button>
+                <button onclick="fillInput('Общежитие')">🏢 Общежитие</button>
+                <button class="btn-site" onclick="window.open('https://alattk.ru/', '_blank')">🌐 Перейти на сайт АТК</button>
+                <button onclick="fillInput('Приемная комиссия')">👥 Приемная комиссия</button>
+                <!-- ДОБАВЛЕННАЯ КНОПКА ТЕСТА -->
+                <button onclick="fillInput('Выбор профессии')" style="border-left: 4px solid var(--accent-color);">🧩 Выбор профессии</button>
+            </div>
+        </div>
+        <p style="font-size: 11px; opacity: 0.6;">Создатель Чикров А.Е.</p>
+    </div>
+
+    <div class="main-content">
+        <div class="chat-window">
+            <div class="chat-header">
+                <div class="bot-avatar">🤖</div>
+                <div class="header-info">
+                    <h2>Виртуальный помощник</h2>
+                    <span>● В сети (Готов помочь)</span>
+                </div>
+            </div>
+
+            <div class="messages-area" id="messages-area">
+                <div class="message bot">
+                     Здравствуйте! 👋 Я — виртуальный помощник колледжа. Чем я могу вам помочь?
+                </div>
+                <div class="typing" id="typing-indicator">Бот печатает сообщение...</div>
+            </div>
+
+            <div class="input-area">
+                <input type="text" id="user-input" placeholder="Напишите ваш вопрос здесь..." onkeypress="checkEnter(event)">
+                <button id="send-btn" onclick="sendMessage()">
+                    <svg width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M15.854.146a.5.5 0 0 1 .11.54l-5.819 14.547a.75.75 0 0 1-1.329.124l-3.178-4.995L.643 7.184a.75.75 0 0 1 .124-1.33L15.314.037a.5.5 0 0 1 .54.11ZM6.636 10.07l2.761 4.338L14.13 2.576 6.636 10.07Zm6.787-8.201L1.591 6.602l4.339 2.76 7.494-7.493Z"/></svg>
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const msgsArea = document.getElementById('messages-area');
+        const userInput = document.getElementById('user-input');
+        const typingIndicator = document.getElementById('typing-indicator');
+
+        const professionsDb = [
+            {
+                code: '08.02.01',
+                keywords: ['строительство зданий', '08.02.01'],
+                name: 'Строительство и эксплуатация зданий и сооружений',
+                qual: 'Техник',
+                duration: '3 года 10 мес.',
+                seats9: '25 мест (очно)',
+                seats11: '25 мест (заочно)',
+                pros: ['Востребованность в строительных компаниях', 'Знание современных технологий возведения зданий', 'Возможность стать прорабом или мастером участка']
+            },
+            {
+                code: '09.02.11',
+                keywords: ['программ', 'айти', '09.02.11'],
+                name: 'Разработка и управление программным обеспечением',
+                qual: 'Программист',
+                duration: '3 года 10 мес.',
+                seats9: '25 мест (очно)',
+                seats11: '-',
+                pros: ['Самая быстрорастущая отрасль', 'Возможность удаленной работы', 'Высокий интеллектуальный доход']
+            },
+            {
+                code: '10.02.05',
+                keywords: ['безопасность', 'защита', '10.02.05'],
+                name: 'Обеспечение информационной безопасности автоматизированных систем',
+                qual: 'Техник по защите информации',
+                duration: '3 года 10 мес.',
+                seats9: '25 мест (очно)',
+                seats11: '-',
+                pros: ['Престижная специальность', 'Работа в банках и госструктурах']
+            },
+            {
+                code: '21.02.19',
+                keywords: ['землеустройство', '21.02.19'],
+                name: 'Землеустройство',
+                qual: 'Специалист',
+                duration: '3 года 10 мес.',
+                seats9: '25 мест (очно)',
+                seats11: '-',
+                pros: ['Работа на свежем воздухе', 'Востребованность']
+            },
+            {
+                code: '23.02.04',
+                keywords: ['машин', 'оборудования', '23.02.04'],
+                name: 'Техническая эксплуатация подъемно-транспортных, строительных, дорожных машин и оборудования',
+                qual: 'Техник',
+                duration: '3 года 10 мес.',
+                seats9: '25 мест (очно)',
+                seats11: '-',
+                pros: ['Знание сложной техники', 'Работа в портах и на стройках']
+            },
+            {
+                code: '43.02.15',
+                keywords: ['повар', 'кондитер', '43.02.15'],
+                name: 'Поварское и кондитерское дело',
+                qual: 'Специалист',
+                duration: '3 года 10 мес.',
+                seats9: '25 мест (очно)',
+                seats11: '-',
+                pros: ['Творческая работа', 'Всегда востребовано']
+            }
+        ];
+
+        const workersDb = [
+            { code: '08.01.28', name: 'Мастер отделочных строительных и декоративных работ' },
+            { code: '08.01.29', name: 'Мастер по ремонту и обслуживанию инженерных систем ЖКХ' },
+            { code: '15.01.05', name: 'Сварщик (ручной и частично механизированной сварки)' },
+            { code: '29.01.33', name: 'Мастер по изготовлению швейных изделий' }
+        ];
+
+        // База вопросов профориентационного теста
+        const quizQuestions = [
+            {
+                q: "Что вам ближе в свободное время?",
+                a: "Изучать программы, играть в компьютерные игры, разбираться в коде",
+                b: "Рисовать, проектировать дома, придумывать интерьеры",
+                c: "Ремонтировать технику, собирать конструкторы, возиться с инструментами",
+                d: "Готовить новые блюда, шить одежду, создавать уютные вещи руками"
+            },
+            {
+                q: "В какой обстановке вы бы предпочли работать в будущем?",
+                a: "В современном офисе за компьютером или удаленно из дома",
+                b: "На строительном объекте, в полевых условиях или архитектурном бюро",
+                c: "В автосервисе, ремонтной мастерской или на производстве",
+                d: "В хорошо оборудованной ресторанной кухне, швейном ателье или студии"
+            },
+            {
+                q: "Какая школьная дисциплина вам нравилась больше остальных?",
+                a: "Информатика или математика",
+                b: "География, черчение или изобразительное искусство",
+                c: "Физика или технология (труды)",
+                d: "Химия или творческие классные часы"
+            },
+            {
+                q: "Представьте, что сломался технический прибор. Ваши действия?",
+                a: "Поищу программную ошибку или попробую перепрошить его",
+                b: "Подумаю, как прочно пересобрать или укрепить его корпус",
+                c: "Разберу его отверткой, найду сломанную шестеренку или контакт и починю",
+                d: "Поручу ремонт мастеру, а сам займусь творческими делами"
+            },
+            {
+                q: "Какой учебный или практический проект вам было бы интереснее создать?",
+                a: "Мобильное приложение или надежную базу данных",
+                b: "Макет загородного участка или план застройки территории",
+                c: "Механическую установку или отремонтированный двигатель",
+                d: "Авторское праздничное меню или коллекцию одежды"
+            },
+            {
+                q: "Какое личное качество вы считаете своим главным преимуществом?",
+                a: "Логический и аналитический ум, усидчивость",
+                b: "Хорошее пространственное мышление и аккуратность",
+                c: "Практичность, умение работать руками, выносливость",
+                d: "Креативность, чувство вкуса и внимание к эстетике"
+            },
+            {
+                q: "Что бы вы скорее выбрали в качестве хобби?",
+                a: "Прохождение интеллектуальных квестов, компьютерные игры",
+                b: "Моделирование макетов из бумаги, дерева или картона",
+                c: "Мелкий бытовой ремонт техники, конструирование",
+                d: "Эксперименты с кулинарными рецептами или рукоделие"
+            },
+            {
+                q: "Какая сфера деятельности кажется вам наиболее стабильной?",
+                a: "IT-индустрия и сфера информационной безопасности",
+                b: "Строительство жилья и распределение земельных ресурсов",
+                c: "Промышленное производство и обслуживание транспорта/ЖКХ",
+                d: "Общественное питание, ресторанное дело и пошив изделий"
+            },
+            {
+                q: "Если бы вы оказались на необитаемом острове, кем бы вы стали?",
+                a: "Разработчиком схем сигнализации и связи с внешним миром",
+                b: "Строителем и проектировщиком прочного жилого укрытия",
+                c: "Создателем необходимых орудий труда из камней и веток",
+                d: "Поваром, который готовит пищу и делает лагерь комфортным"
+            },
+            {
+                q: "Что именно вас привлекает в будущей работе?",
+                a: "Поиск изящных алгоритмических решений в виртуальной среде",
+                b: "Создание масштабных объектов инфраструктуры, которые простоят десятилетия",
+                c: "Управление сложными механизмами и ручные сборочные операции",
+                d: "Создание осязаемой красоты, приятного вкуса или уюта для людей"
+            },
+            {
+                q: "Какого типа задачи вам даются легче всего?",
+                a: "Анализ графиков, написание логических цепочек, кодинг",
+                b: "Измерения на местности, вычисления площадей, разметка",
+                c: "Сборка конструкций, регулировка узлов и пайка",
+                d: "Декорирование помещений, приготовление пищи, пошив или шитье"
+            },
+            {
+                q: "Какая новость в технологическом журнале привлечет ваше внимание скорее?",
+                a: "«Выпущена новая нейросеть, способная защищать банковские сервера»",
+                b: "«Архитекторы представили чертежи уникального эко-города будущего»",
+                c: "«Создана новая модель высокоэффективного подъемного крана»",
+                d: "«Шеф-повар известного ресторана создал десерт по инновационной технологии»"
+            },
+            {
+                q: "Что для вас важнее всего получить от будущей профессии?",
+                a: "Интеллектуальное развитие и возможность работать из любой точки мира",
+                b: "Наглядный физический результат своей работы (построенные объекты)",
+                c: "Уверенность в своих практических навыках ремонта и обслуживания систем",
+                d: "Творческую свободу, создание уникального продукта для клиентов"
+            },
+            {
+                q: "Представьте, что вы благоустраиваете городской парк. Ваша роль?",
+                a: "Настроить автоматику полива, освещения и видеоконтроля",
+                b: "Спроектировать планировку аллей и провести межевание границ",
+                c: "Установить конструкции аттракционов и игровых зон",
+                d: "Разработать дизайн зон отдыха и составить меню для парковых кафе"
+            },
+            {
+                q: "Какой предмет обязательно должен лежать на вашем рабочем столе?",
+                a: "Высокопроизводительный ноутбук или графический планшет",
+                b: "Чертежные карандаши, профессиональная линейка и ластик",
+                c: "Набор ручных отверток, мультиметр или плоскогубцы",
+                d: "Точные весы, качественные специи или стильные аксессуары для шитья"
+            }
+        ];
+
+        let quizState = {
+            active: false,
+            currentQuestion: 0,
+            scores: { A: 0, B: 0, C: 0, D: 0 }
+        };
+
+        function fillInput(text) { userInput.value = text; sendMessage(); }
+        function checkEnter(e) { if (e.key === 'Enter') sendMessage(); }
+
+        function sendMessage() {
+            const text = userInput.value.trim();
+            if (!text) return;
+            addMessageToChat(text, 'user');
+            userInput.value = '';
+            typingIndicator.style.display = 'block';
+            msgsArea.appendChild(typingIndicator);
+            setTimeout(() => {
+                const botReply = generateBotResponse(text);
+                if (botReply) {
+                    typingIndicator.style.display = 'none';
+                    addMessageToChat(botReply, 'bot');
+                }
+            }, 600);
+        }
+
+        function addMessageToChat(text, sender) {
+            const msgDiv = document.createElement('div');
+            msgDiv.className = `message ${sender}`;
+            msgDiv.innerHTML = text;
+            msgsArea.insertBefore(msgDiv, typingIndicator);
+            msgsArea.scrollTop = msgsArea.scrollHeight;
+        }
+
+        // Запуск профориентационного теста
+        function startQuiz() {
+            quizState.active = true;
+            quizState.currentQuestion = 0;
+            quizState.scores = { A: 0, B: 0, C: 0, D: 0 };
+            showNextQuestion();
+        }
+
+        // Вывод очередного вопроса теста
+        function showNextQuestion() {
+            const qData = quizQuestions[quizState.currentQuestion];
+            const cardHTML = `
+                <div class="quiz-card">
+                    <p><b>Вопрос ${quizState.currentQuestion + 1} из 15:</b><br>${qData.q}</p>
+                    <button class="quiz-btn" onclick="answerQuiz('A')"><b>А:</b> ${qData.a}</button>
+                    <button class="quiz-btn" onclick="answerQuiz('B')"><b>B:</b> ${qData.b}</button>
+                    <button class="quiz-btn" onclick="answerQuiz('C')"><b>C:</b> ${qData.c}</button>
+                    <button class="quiz-btn" onclick="answerQuiz('D')"><b>D:</b> ${qData.d}</button>
+                </div>
+            `;
+            addMessageToChat(cardHTML, 'bot');
+        }
+
+        // Обработка выбора ответа
+        function answerQuiz(option) {
+            if (!quizState.active) return;
+
+            // Деактивируем предыдущие кнопки в чате, чтобы исключить повторные клики
+            const activeButtons = document.querySelectorAll('.messages-area .quiz-btn:not([disabled])');
+            activeButtons.forEach(btn => btn.setAttribute('disabled', 'true'));
+
+            // Увеличиваем счетчики
+            quizState.scores[option]++;
+            quizState.currentQuestion++;
+
+            typingIndicator.style.display = 'block';
+            msgsArea.appendChild(typingIndicator);
+
+            setTimeout(() => {
+                typingIndicator.style.display = 'none';
+                if (quizState.currentQuestion < quizQuestions.length) {
+                    showNextQuestion();
+                } else {
+                    quizState.active = false;
+                    showQuizResult();
+                }
+            }, 400);
+        }
+
+        // Анализ результатов и вывод рекомендаций
+        function showQuizResult() {
+            const s = quizState.scores;
+            let maxCategory = 'A';
+            let maxVal = s.A;
+
+            if (s.B > maxVal) { maxCategory = 'B'; maxVal = s.B; }
+            if (s.C > maxVal) { maxCategory = 'C'; maxVal = s.C; }
+            if (s.D > maxVal) { maxCategory = 'D'; maxVal = s.D; }
+
+            let resultHTML = "";
+
+            if (maxCategory === 'A') {
+                resultHTML = `
+                    <b>Ваш профиль: Информационные технологии и безопасность! 💻</b><br><br>
+                    У вас аналитический склад ума, развитая логика и явный интерес к цифровой среде. Вам нравится программировать, проектировать интеллектуальные системы или обеспечивать их безопасность.<br><br>
+                    <b>Рекомендуемые направления обучения в нашем колледже:</b>
+                    <ul class="spec-list">
+                        <li><a onclick="fillInput('09.02.11')">09.02.11 Разработка и управление программным обеспечением</a></li>
+                        <li><a onclick="fillInput('10.02.05')">10.02.05 Обеспечение информационной безопасности систем</a></li>
+                    </ul>
+                `;
+            } else if (maxCategory === 'B') {
+                resultHTML = `
+                    <b>Ваш профиль: Строительство, архитектура и картография! 🏢</b><br><br>
+                    Вам нравится создавать реальные физические объекты, организовывать пространство вокруг себя и работать с масштабными планами и расчетами.<br><br>
+                    <b>Рекомендуемые направления обучения в нашем колледже:</b>
+                    <ul class="spec-list">
+                        <li><a onclick="fillInput('08.02.01')">08.02.01 Строительство и эксплуатация зданий и сооружений</a></li>
+                        <li><a onclick="fillInput('21.02.19')">21.02.19 Землеустройство</a></li>
+                        <li><a onclick="fillInput('08.01.28')">08.01.28 Мастер отделочных строительных и декоративных работ</a></li>
+                    </ul>
+                `;
+            } else if (maxCategory === 'C') {
+                resultHTML = `
+                    <b>Ваш профиль: Техника, транспорт и инженерные системы! ⚙️</b><br><br>
+                    Вы — практик, который уверенно чувствует себя при работе со сложными машинами, инструментами, металлом и инженерными коммуникациями.<br><br>
+                    <b>Рекомендуемые направления обучения в нашем колледже:</b>
+                    <ul class="spec-list">
+                        <li><a onclick="fillInput('23.02.04')">23.02.04 Техническая эксплуатация машин и оборудования</a></li>
+                        <li><a onclick="fillInput('15.01.05')">15.01.05 Сварщик (ручной и частично механизированной сварки)</a></li>
+                        <li><a onclick="fillInput('08.01.29')">08.01.29 Мастер по ремонту и обслуживанию инженерных систем ЖКХ</a></li>
+                    </ul>
+                `;
+            } else {
+                resultHTML = `
+                    <b>Ваш профиль: Творчество, кулинария и декоративно-прикладное искусство! 🎨🍳</b><br><br>
+                    У вас развито чувство вкуса, эстетики и стремление создавать материальную красоту или кулинарные шедевры для людей.<br><br>
+                    <b>Рекомендуемые направления обучения в нашем колледже:</b>
+                    <ul class="spec-list">
+                        <li><a onclick="fillInput('43.02.15')">43.02.15 Поварское и кондитерское дело</a></li>
+                        <li><a onclick="fillInput('29.01.33')">29.01.33 Мастер по изготовлению швейных изделий</a></li>
+                    </ul>
+                `;
+            }
+
+            addMessageToChat(`🎉 <b>Профориентационный тест успешно завершен!</b><br><br>${resultHTML}`, 'bot');
+        }
+
+        function generateBotResponse(userText) {
+            const lowerText = userText.toLowerCase();
+
+            // Если запущен тест, временно не обрабатываем обычные текстовые команды
+            if (quizState.active) {
+                return "Пожалуйста, выберите один из вариантов ответа непосредственно в карточке вопроса выше, чтобы продолжить тест.";
+            }
+
+            // Обработка запуска теста выбора профессии
+            if (lowerText.includes('выбор') || lowerText.includes('професси') || lowerText.includes('тест')) {
+                setTimeout(() => {
+                    startQuiz();
+                }, 100);
+                return "Отлично! Давайте поможем вам определиться с оптимальным направлением обучения. Я подготовил для вас тест из 15 вопросов. Пожалуйста, отвечайте искренне. Начинаем!";
+            }
+
+            for (const item of professionsDb) {
+                const matches = item.keywords.some(keyword => lowerText.includes(keyword)) || lowerText.includes(item.code);
+                if (matches) {
+                    return `
+                        <b>Информация о направлении:</b><br>
+                        <div class="info-card">
+                            <p><b>Код:</b> ${item.code}</p>
+                            <p><b>Название:</b> ${item.name}</p>
+                            <p><b>Квалификация:</b> ${item.qual}</p>
+                            <p><b>Срок обучения:</b> ${item.duration}</p>
+                            
+                            <div class="seats">
+                                <p><b>Места на базе 9 кл (очно):</b> ${item.seats9}</p>
+                                <p><b>Места на базе 11 кл:</b> ${item.seats11}</p>
+                            </div>
+                        </div>
+                        <b>Почему стоит выбрать это направление:</b>
+                        <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.6;">
+                            ${item.pros.map(p => `<li>${p}</li>`).join('')}
+                        </ul>
+                    `;
+                }
+            }
+
+            if (lowerText.includes('список') || lowerText.includes('все специаль')) {
+                let response = "<b>Направления подготовки (Специалисты):</b><ul class='spec-list'>";
+                professionsDb.forEach(s => {
+                    response += `<li><a onclick="fillInput('${s.code}')">${s.code} ${s.name}</a></li>`;
+                });
+                response += "</ul><br><b>Профессии (Рабочие):</b><ul class='spec-list'>";
+                workersDb.forEach(w => {
+                    response += `<li><a onclick="fillInput('${w.code}')">${w.code} ${w.name}</a></li>`;
+                });
+                response += "</ul><br><i>Нажмите на код, чтобы узнать подробности.</i>";
+                return response;
+            }
+
+            else if (lowerText.includes('кружок') || lowerText.includes('кружки') || lowerText.includes('секци')) {
+                return `В нашем техникуме активно развивается студенческое творчество и спорт! У нас работают следующие кружки и секции:<br>
+                <ul style="margin-left: 20px; margin-top: 10px; line-height: 1.4;">
+                    <li><b>🏆 Спортивные секции:</b> волейбол, легкая атлетика.</li>
+                    <li><b>🎤 Вокально-инструментальная студия:</b> развивайте певческие навыки и учитесь играть.</li>
+                    <li><b>🤖 Клуб робототехники:</b> создание IT-проектов.</li>
+                    <li><b>📸 Пресс-центр:</b> журналистика и фото.</li>
+                    <li><b>🤝 Волонтерский клуб:</b> социальные проекты.</li>
+                </ul>`;
+            }
+
+            else if (lowerText.includes('документ') || lowerText.includes('поступ')) {
+                return "Для поступления вам потребуются:<br>1. Ксерокопия паспорта.<br>2. Оригинал аттестата.<br>3. 4 фотографии 3х4.<br>4. Медицинская справка 086-У.";
+            }
+            else if (lowerText.includes('общежити')) {
+                return "Да, иногородним студентам предоставляется комфортабельное общежитие на весь период обучения.";
+            }
+
+            // ПОДАЧА ЧЕРЕЗ ГОСУСЛУГИ
+            else if (lowerText.includes('госуслуг') || lowerText.includes('электрон') || lowerText.includes('заявлен') || lowerText.includes('подать')) {
+                return `
+                    <b>Прием документов в электронной форме (Госуслуги)</b><br>
+                    <p style="margin-top: 10px; margin-bottom: 10px; line-height: 1.4;">
+                        На портале Госуслуг работает сервис по приему заявлений в колледжи. 
+                        Подать заявление можно <b>только на очную форму обучения</b>. Заполняет заявку сам абитуриент.
+                    </p>
+                    
+                    <div class="info-card" style="border-left-color: #0b5ed7;">
+                        <p style="font-weight: bold; margin-bottom: 8px; color: #0b5ed7;">Для этого нужно:</p>
+                        <ol style="margin-left: 18px; font-size: 14px; line-height: 1.5; display: flex; flex-direction: column; gap: 4px;">
+                            <li>Указать уровень образования (9 или 11 классов).</li>
+                            <li>Выбрать образовательную организацию.</li>
+                            <li>Указать, требуются ли особые условия.</li>
+                            <li>Указать индивидуальные достижения (победы в олимпиадах и т.д.).</li>
+                            <li>Проверить персональные данные, которые подтягиваются из личного кабинета на Госуслугах.</li>
+                            <li>Проверить данные об образовании и приложить скан документа об образовании.</li>
+                            <li>При необходимости загрузить дополнительные документы.</li>
+                            <li>Указать контакты родителей.</li>
+                        </ol>
+                    </div>
+                    
+                    <p style="margin-top: 10px; line-height: 1.4;">
+                        📅 <b>Сроки подачи:</b> подать документы можно до <b>25 августа</b>. При наличии свободных мест прием документов продлевается до <b>25 ноября</b>.
+                    </p>
+                `;
+            }
+
+            // ОБРАБОТЧИК ДЛЯ ПРИЕМНОЙ КОМИССИИ
+            else if (lowerText.includes('приемн') || lowerText.includes('комисси') || lowerText.includes('режим') || lowerText.includes('телефон')) {
+                return `
+                    <b>Информация о приемной комиссии:</b><br>
+                    <div class="info-card">
+                        <p style="font-weight: bold; margin-bottom: 5px; color: var(--primary-color);">Состав комиссии:</p>
+                        <p>• <b>Председатель:</b> Аладьева Ирина Николаевна</p>
+                        <p>• <b>Заместитель председателя:</b> Морозова Марина Евгеньевна</p>
+                        <p>• <b>Ответственный секретарь:</b> Демина Галина Николаевна</p>
+                        <p>• <b>Заместитель отв. секретаря:</b> Соколенко Наталья Викторовна</p>
+                    </div>
+                    <div class="info-card" style="border-left-color: var(--accent-color);">
+                        <p style="font-weight: bold; margin-bottom: 5px; color: var(--accent-color);">Режим работы:</p>
+                        <p>• <b>Понедельник - Пятница:</b> 8:00 - 17:00</p>
+                        <p>• <b>Суббота:</b> 8:00 - 13:00</p>
+                        <p>• <b>Воскресенье:</b> выходной</p>
+                    </div>
+                    
+                    <div class="info-card" style="border-left-color: #0b5ed7;">
+                        <p style="font-weight: bold; margin-bottom: 5px; color: #0b5ed7;">Электронная подача документов:</p>
+                        <p>Вы можете подать заявление в электронной форме через портал Госуслуги.</p>
+                        <p style="margin-top: 5px;"><a onclick="fillInput('Подать заявление на портале Госуслуги')" style="color: #0b5ed7; text-decoration: underline; cursor: pointer; font-weight: bold;">Узнать подробнее об электронной подаче ➔</a></p>
+                    </div>
+
+                    <p>📞 <b>Обращаться по телефону:</b> <a href="tel:+78353121939">+7 (83531) 2-19-39</a></p>
+                `;
+            }
+
+            return "Извините, я пока не знаю точного ответа на этот вопрос. Обратитесь на сайт <a href='https://alattk.ru/' target='_blank'>alattk.ru</a> для более точной информации.";
+        }
+    </script>
+</body>
+</html>
